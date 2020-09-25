@@ -25,7 +25,7 @@ public class RecorderActivity extends AppCompatActivity implements LocationListe
     private TextView infoTxt;
     private TextView spdTxt,altTxt;
     private Button recordButton;
-    private Recorder recorder;
+    private RecorderService recorderService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,10 +39,11 @@ public class RecorderActivity extends AppCompatActivity implements LocationListe
         altTxt=findViewById(R.id.altTxt);
         recordButton=findViewById(R.id.recordBtn);
 
-        recorder=new Recorder();
+        recorderService=((TrackerApp)getApplicationContext()).getRecorderService();
+
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         try {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 1, recorder);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 1, recorderService);
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 1, this);
         }catch(SecurityException e){
             finish();
@@ -56,7 +57,7 @@ public class RecorderActivity extends AppCompatActivity implements LocationListe
         recordButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(recorder.isInProgress()){
+                if(recorderService.isInProgress()){
                     stop();
                 }else{
                     start();
@@ -68,12 +69,12 @@ public class RecorderActivity extends AppCompatActivity implements LocationListe
     public void start(){
         recordButton.setBackgroundColor(Color.RED);
         recordButton.setText("Stop");
-        recorder.startRecording();
+        recorderService.startRecording();
     }
 
     public void stop(){
-        recorder.stopRecording();
-        final Path path=recorder.getPath();
+        recorderService.stopRecording();
+        final Path path= recorderService.getPath();
         if(!path.getPath().isEmpty()){
 
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -135,7 +136,7 @@ public class RecorderActivity extends AppCompatActivity implements LocationListe
 
     @Override
     public void onProviderDisabled(String provider) {
-        if(recorder.isInProgress())
+        if(recorderService.isInProgress())
             stop();
         disableRecording();
     }
